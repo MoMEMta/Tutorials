@@ -1,2 +1,37 @@
 # Tutorials
-A set of examples and tutorials illustrating the use of MoMEMta
+This repository contains a set of working standalone examples illustrating the use of MoMEMta.
+
+## Install
+
+- Clone the repository or download and extract the archive.
+- Execute the following in the `Tutorials` folder:
+```
+mkdir build
+cd build
+cmake ..
+make -j 4
+```
+
+The following options are available when configuring the the build (when running `cmake ..`):
+- `-DMOMEMTA_INCLUDE_DIR=(path)`: Path to your installation of MoMEMta. Use this if your version of MoMEMta was installed locally and not in your system directories
+- `-DBOOST_ROOT=(path)`: Use specific Boost library installation
+
+## Run
+
+You now have a set of executables located in sub-folders of the `build` directory. 
+However, these cannot be executed yet: you need to build the matrix elements yourself,
+just like when you export them using MoMEMta-MaGMEE and copy them to your project's directory.
+
+For instance, to build the `TTbar_FullyLeptonic` example's matrix element, do:
+```
+cd ../TTbar_FullyLeptonic/MatrixElement/
+mkdir build
+cd build
+cmake ..
+make -j 4
+```
+This creates a shared library that can loaded dynamically by MoMEMta. The example can now be executed:
+```
+cd ../../../build/
+TTbar_FullyLeptonic/TTbar_FullyLeptonic.exe
+```
