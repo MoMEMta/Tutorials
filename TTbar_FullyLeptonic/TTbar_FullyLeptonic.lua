@@ -129,6 +129,7 @@ jacobians = {'flatter_s13::jacobian', 'flatter_s134::jacobian', 'flatter_s25::ja
 -- This module defines the `integrands` output, which will be taken by MoMEMta as the value to integrate
 MatrixElement.ttbar = {
   pdf = 'CT10nlo',
+  pdf_scale = parameter('top_mass'),
 
   -- Name of the matrix element, defined in the .cc file of the ME 
   matrix_element = 'TTbar_ee_sm_P1_Sigma_sm_gg_epvebemvexbx',
