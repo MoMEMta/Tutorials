@@ -27,11 +27,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -pedantic -Wextra")
 
 find_package(MoMEMta REQUIRED)
 
-find_package(ROOT REQUIRED)
+find_package(ROOT 6.02 REQUIRED)
 find_library(ROOT_GENVECTOR_LIBRARY GenVector HINTS ${ROOT_LIBRARY_DIR})
 
 set(Boost_NO_BOOST_CMAKE ON)
-find_package(Boost REQUIRED log)
+find_package(Boost 1.54 REQUIRED log)
 add_definitions(-DBOOST_LOG_DYN_LINK)
 
 include_directories(${MOMEMTA_INCLUDE_DIRS})
