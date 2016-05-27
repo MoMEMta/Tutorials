@@ -15,12 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-add_executable(TTbar_FullyLeptonic "TTbar_FullyLeptonic.cc")
+add_executable(WW_FullyLeptonic "WW_FullyLeptonic.cc")
 
-target_link_libraries(TTbar_FullyLeptonic LINK_PUBLIC ${MOMEMTA_LIBRARIES})
-target_link_libraries(TTbar_FullyLeptonic LINK_PUBLIC ${ROOT_LIBRARIES})
-target_link_libraries(TTbar_FullyLeptonic LINK_PUBLIC ${ROOT_GENVECTOR_LIBRARY})
-target_link_libraries(TTbar_FullyLeptonic LINK_PUBLIC ${Boost_LIBRARIES})
+target_link_libraries(WW_FullyLeptonic LINK_PUBLIC ${MOMEMTA_LIBRARIES})
+target_link_libraries(WW_FullyLeptonic LINK_PUBLIC ${ROOT_LIBRARIES})
+target_link_libraries(WW_FullyLeptonic LINK_PUBLIC ${ROOT_GENVECTOR_LIBRARY})
+target_link_libraries(WW_FullyLeptonic LINK_PUBLIC ${Boost_LIBRARIES})
 
-set_target_properties(TTbar_FullyLeptonic PROPERTIES OUTPUT_NAME
-      "TTbar_FullyLeptonic.exe")
+set_target_properties(WW_FullyLeptonic PROPERTIES OUTPUT_NAME
+      "WW_FullyLeptonic.exe")
