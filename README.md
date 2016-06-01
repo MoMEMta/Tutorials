@@ -7,6 +7,8 @@ This repository contains a set of working standalone examples illustrating the u
 - MoMEMta >= 0.1.0 (and its requirements, such as LHAPDF, Boost)
 - A C++-11 capable compiler
 
+**Note**: MoMEMta needs to be installed on the system (locally or globally), cf. MoMEMta documentation.
+
 ## Install
 
 - Clone the repository or download and extract the archive.
@@ -18,10 +20,10 @@ cmake ..
 make -j 4
 ```
 
-The following options are available when configuring the the build (when running `cmake ..`):
+The following options are available when configuring the build (when running `cmake ..`):
 - `-DMOMEMTA_INCLUDE_DIR=(path)`: Path to the `include` directory of your installation of MoMEMta. Use this if your version of MoMEMta was installed locally and not in your system directories
 - `-DMOMEMTA_LIBRARY=(path)`: Path to the shared library `libmomemta.so` of your installation of MoMEMta. Use this if your version of MoMEMta was installed locally and not in your system directories
-- `-DBOOST_ROOT=(path)`: Use specific Boost library installation
+- `-DBOOST_ROOT=(path)`: Use specific Boost version (path to install directory)
 
 ## Run
 
@@ -37,7 +39,7 @@ cd build
 cmake .. # If you had to specify the `MOMEMTA_INCLUDE_DIR´ when building the tutorials, you'll have to do it here as well
 make -j 4
 ```
-This creates a shared library that can loaded dynamically by MoMEMta. The example can now be executed:
+This creates a shared library that can be loaded dynamically by MoMEMta. The example can now be executed:
 ```
 cd ../../../build/
 TTbar_FullyLeptonic/TTbar_FullyLeptonic.exe
