@@ -20,14 +20,17 @@
 #include <momemta/ConfigurationReader.h>
 #include <momemta/Logging.h>
 #include <momemta/MoMEMta.h>
-#include <momemta/Utils.h>
+#include <momemta/Unused.h>
 
 #include <TTree.h>
 #include <TChain.h>
+#include <TTreeReader.h>
+#include <TTreeReaderValue.h>
 #include <Math/PtEtaPhiM4D.h>
 #include <Math/LorentzVector.h>
 
 #include <chrono>
+#include <memory>
 
 using namespace std::chrono;
 
@@ -49,27 +52,21 @@ int main(int argc, char** argv) {
      */
     TChain chain("t");
     chain.Add("../TTbar_FullyLeptonic/tt_20evt.root");
+    TTreeReader myReader(&chain);
 
-    LorentzVectorM* lep_plus_p4M = nullptr;
-    LorentzVectorM* lep_minus_p4M = nullptr;
-    LorentzVectorM* bjet1_p4M = nullptr;
-    LorentzVectorM* bjet2_p4M = nullptr;
-    float MET_met, MET_phi;
-    int leading_lep_PID;
+    TTreeReaderValue<LorentzVectorM> lep_plus_p4M(myReader, "lep1_p4");
+    TTreeReaderValue<LorentzVectorM> lep_minus_p4M(myReader, "lep2_p4");
+    TTreeReaderValue<LorentzVectorM> bjet1_p4M(myReader, "bjet1_p4");
+    TTreeReaderValue<LorentzVectorM> bjet2_p4M(myReader, "bjet2_p4");
+    TTreeReaderValue<float> MET_met(myReader, "MET_met");
+    TTreeReaderValue<float> MET_phi(myReader, "MET_phi");
+    TTreeReaderValue<int> leading_lep_PID(myReader, "leadLepPID");
 
-    chain.SetBranchAddress("lep1_p4", &lep_plus_p4M);
-    chain.SetBranchAddress("lep2_p4", &lep_minus_p4M);
-    chain.SetBranchAddress("bjet1_p4", &bjet1_p4M);
-    chain.SetBranchAddress("bjet2_p4", &bjet2_p4M);
-    chain.SetBranchAddress("MET_met", &MET_met);
-    chain.SetBranchAddress("MET_phi", &MET_phi);
-    chain.SetBranchAddress("leadLepPID", &leading_lep_PID);
-    
     /*
      * Define output TTree, which will be a clone of the input tree,
      * with the addition of the weights we're computing (including uncertainty and computation time)
      */
-    TTree* out_tree = chain.CloneTree(0);
+    std::unique_ptr<TTree> out_tree(chain.CloneTree(0));
     double weight_TT, weight_TT_err, weight_TT_time;
     out_tree->Branch("weight_TT", &weight_TT);
     out_tree->Branch("weight_TT_err", &weight_TT_err);
@@ -90,9 +87,7 @@ int main(int argc, char** argv) {
     /*
      * Loop over all input events
      */
-    for (int64_t entry = 0; entry < chain.GetEntries(); entry++) {
-        chain.GetEntry(entry);
-
+    while (myReader.Next()) {
         /*
          * Prepare the LorentzVectors passed to MoMEMta:
          * In the input file they are written in the PtEtaPhiM<float> basis,
@@ -103,11 +98,11 @@ int main(int argc, char** argv) {
         LorentzVector bjet1_p4 { bjet1_p4M->Px(), bjet1_p4M->Py(), bjet1_p4M->Pz(), bjet1_p4M->E() };
         LorentzVector bjet2_p4 { bjet2_p4M->Px(), bjet2_p4M->Py(), bjet2_p4M->Pz(), bjet2_p4M->E() };
 
-        LorentzVectorM met_p4M { MET_met, 0, MET_phi, 0 };
+        LorentzVectorM met_p4M { *MET_met, 0, *MET_phi, 0 };
         LorentzVector met_p4 { met_p4M.Px(), met_p4M.Py(), met_p4M.Pz(), met_p4M.E() };
         
         // Ensure the leptons are given in the correct order w.r.t their charge 
-        if (leading_lep_PID < 0)
+        if (*leading_lep_PID < 0)
             std::swap(lep_plus_p4, lep_minus_p4);
 
         auto start_time = system_clock::now();
@@ -120,7 +115,7 @@ int main(int argc, char** argv) {
         weight_TT_err = weights.back().second;
         weight_TT_time = std::chrono::duration_cast<milliseconds>(end_time - start_time).count();
 
-        LOG(debug) << "Event " << entry << " result: " << weight_TT << " +- " << weight_TT_err;
+        LOG(debug) << "Event " << myReader.GetCurrentEntry() << " result: " << weight_TT << " +- " << weight_TT_err;
         LOG(info) << "Weight computed in " << weight_TT_time << "ms";
 
         out_tree->Fill();
