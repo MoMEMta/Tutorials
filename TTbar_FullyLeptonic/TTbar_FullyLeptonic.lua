@@ -19,28 +19,28 @@ cuba = {
 
 -- The transfer functions take as input the particles passed in the computeWeights() function,
 -- and each add a dimension of integration
-GaussianTransferFunction.tf_p1 = {
-    -- getpspoint() generates an input tag of type `cuba::ps_points/i`
-    -- where `i` is automatically incremented each time the function is called.
-    ps_point = getpspoint(),
+GaussianTransferFunctionOnEnergy.tf_p1 = {
+    -- add_dimension() generates an input tag allowing the retrieve a new phase-space point component,
+    -- and it notifies MoMEMta that a new integration dimension is requested
+    ps_point = add_dimension(),
     reco_particle = 'input::particles/1',
     sigma = 0.05,
 }
 
-GaussianTransferFunction.tf_p2 = {
-    ps_point = getpspoint(),
+GaussianTransferFunctionOnEnergy.tf_p2 = {
+    ps_point = add_dimension(),
     reco_particle = 'input::particles/2',
     sigma = 0.10,
 }
 
-GaussianTransferFunction.tf_p3 = {
-    ps_point = getpspoint(),
+GaussianTransferFunctionOnEnergy.tf_p3 = {
+    ps_point = add_dimension(),
     reco_particle = 'input::particles/3',
     sigma = 0.05,
 }
 
-GaussianTransferFunction.tf_p4 = {
-    ps_point = getpspoint(),
+GaussianTransferFunctionOnEnergy.tf_p4 = {
+    ps_point = add_dimension(),
     reco_particle = 'input::particles/4',
     sigma = 0.10,
 }
@@ -55,7 +55,7 @@ inputs_before_perm = {
 -- Use permutator module to permutate input particles 2 and 4 (ie, the b-jets) using the MC,
 -- which requires an additional dimension for integration
 Permutator.permutator = {
-    ps_point = getpspoint(),
+    ps_point = add_dimension(),
     inputs = {
       inputs_before_perm[2],
       inputs_before_perm[4],
@@ -72,25 +72,25 @@ inputs = {
 -- Use the BreitWignerGenerators to generate values distributed as the corresponding peaks,
 -- for each propagator in the topology
 BreitWignerGenerator.flatter_s13 = {
-    ps_point = getpspoint(),
+    ps_point = add_dimension(),
     mass = parameter('W_mass'),
     width = parameter('W_width')
 }
 
 BreitWignerGenerator.flatter_s134 = {
-    ps_point = getpspoint(),
+    ps_point = add_dimension(),
     mass = parameter('top_mass'),
     width = parameter('top_width')
 }
 
 BreitWignerGenerator.flatter_s25 = {
-    ps_point = getpspoint(),
+    ps_point = add_dimension(),
     mass = parameter('W_mass'),
     width = parameter('W_width')
 }
 
 BreitWignerGenerator.flatter_s256 = {
-    ps_point = getpspoint(),
+    ps_point = add_dimension(),
     mass = parameter('top_mass'),
     width = parameter('top_width')
 }
@@ -110,79 +110,105 @@ BlockD.blockd = {
     s256 = 'flatter_s256::s',
 }
 
--- Using the fully reconstructed event (invisibles and visibles), build the initial state
-BuildInitialState.boost = {
-    particles = inputs,
-    invisibles = {
-        'blockd::invisibles',
-    },
-
-    -- Since the neutrinos were reconstructed using the experimental MET,
-    -- the event has non-zero total transverse momentum,
-    -- so we have to do the boost to define an initial state satisfying conservation
-    -- of momentum.
-    do_transverse_boost = true
+-- The Block generates a collection of "solutions", each containing reconstructed invisible particles (neutrinos)
+-- and a corresponding Jacobian.
+-- We now have to loop over this collection, and on each of these solutions:
+--   - reconstruct the initial state
+--   - evaluate the matrix element & PDFs
+--   - multiply all the Jacobians with the matrix element and PDF values
+-- The loop is taken care of using a Looper module, which takes as input the collection of solutions 
+-- coming out of the Block, and a "Path" object defining the modules to be run in the loop: 
+-- each of these modules has access to a single solution (accessed through the 'looper::solution' input tag).
+Looper.looper = {
+    solutions = 'blockd::solutions',
+    path = Path('boost', 'ttbar', 'integrand')
 }
 
-jacobians = {'flatter_s13::jacobian', 'flatter_s134::jacobian', 'flatter_s25::jacobian', 'flatter_s256::jacobian', 'tf_p1::TF_times_jacobian', 'tf_p2::TF_times_jacobian', 'tf_p3::TF_times_jacobian', 'tf_p4::TF_times_jacobian'}
+--
+-- Start of loop over solutions
+--
 
--- This module defines the `integrands` output, which will be taken by MoMEMta as the value to integrate
-MatrixElement.ttbar = {
-  pdf = 'CT10nlo',
-  pdf_scale = parameter('top_mass'),
+    -- Using the fully reconstructed event (invisibles and visibles), build the initial state
+    BuildInitialState.boost = {
+        particles = inputs,
+        solution = 'looper::solution',
 
-  -- Name of the matrix element, defined in the .cc file of the ME 
-  matrix_element = 'TTbar_ee_sm_P1_Sigma_sm_gg_epvebemvexbx',
-  matrix_element_parameters = {
-      card = '../TTbar_FullyLeptonic/MatrixElement/Cards/param_card.dat'
-  },
-
-  initialState = 'boost::output',
-
-  invisibles = {
-    input = 'blockd::invisibles',
-    -- Jacobians of the block: one value per invisibles' solution
-    jacobians = 'blockd::jacobians',
-    ids = {
-      {
-        pdg_id = 12,
-        me_index = 2,
-      },
-
-      {
-        pdg_id = -12,
-        me_index = 5,
-      }
+        -- Since the neutrinos were reconstructed using the experimental MET,
+        -- the event has non-zero total transverse momentum,
+        -- so we have to do the boost to define an initial state satisfying conservation
+        -- of momentum.
+        do_transverse_boost = true
     }
-  },
 
-  -- Configure how the inputs are linked to the matrix element (order and PID of the leg)
-  -- Together with the invisibles' ids, it has to match the `mapFinalStates` index in the matrix element .cc file
-  particles = {
-    inputs = inputs,
-    ids = {
-      {
-        pdg_id = -11,
-        me_index = 1,
+    jacobians = {'flatter_s13::jacobian', 'flatter_s134::jacobian', 'flatter_s25::jacobian', 'flatter_s256::jacobian', 'tf_p1::TF_times_jacobian', 'tf_p2::TF_times_jacobian', 'tf_p3::TF_times_jacobian', 'tf_p4::TF_times_jacobian'}
+
+    -- This modules evaluates the matrix element and PDFs on the fully reconstructed event, and multiplies those
+    -- with all the Jacobians it is given.
+    MatrixElement.ttbar = {
+      pdf = 'CT10nlo',
+      pdf_scale = parameter('top_mass'),
+
+      -- Name of the matrix element, defined in the .cc file of the ME 
+      matrix_element = 'TTbar_ee_sm_P1_Sigma_sm_gg_epvebemvexbx',
+      matrix_element_parameters = {
+          card = '../TTbar_FullyLeptonic/MatrixElement/Cards/param_card.dat'
       },
 
-      {
-        pdg_id = 5,
-        me_index = 3,
+      initialState = 'boost::partons',
+
+      -- Configure how the Block's reconstructed particles and the input particles are linked to the matrix element (order and PID of the leg)
+      -- The maps have to match the `mapFinalStates` index in the matrix element .cc file
+      invisibles = {
+        input = 'looper::solution',
+        ids = {
+          {
+            pdg_id = 12,
+            me_index = 2,
+          },
+
+          {
+            pdg_id = -12,
+            me_index = 5,
+          }
+        }
       },
 
-      {
-        pdg_id = 11,
-        me_index = 4,
+      particles = {
+        inputs = inputs,
+        ids = {
+          {
+            pdg_id = -11,
+            me_index = 1,
+          },
+
+          {
+            pdg_id = 5,
+            me_index = 3,
+          },
+
+          {
+            pdg_id = 11,
+            me_index = 4,
+          },
+
+          {
+            pdg_id = -5,
+            me_index = 6,
+          },
+        }
       },
 
-      {
-        pdg_id = -5,
-        me_index = 6,
-      },
+      -- Other jacobians
+      jacobians = jacobians
     }
-  },
 
-  -- Other jacobians: only one value each
-  jacobians = jacobians
-}
+    -- The last module in the loop is a "Summer": it sums the value defined as input when looping over the solutions
+    -- This allows to define the actual integrand (which is the sum of the product ME*PDF*PDF*Jacobians evaluated on each solution)
+    DoubleSummer.integrand = { input = 'ttbar::output' }
+
+--
+-- End of loop over solutions
+--
+
+-- Register with MoMEMta which output defines the integrand
+integrand('integrand::sum')
