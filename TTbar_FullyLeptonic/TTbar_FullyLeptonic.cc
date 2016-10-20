@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
      * Prepare MoMEMta to compute the weights
      */
     // Set MoMEMta's logging level to `debug`
-    logging::set_level(boost::log::trivial::debug);
+    logging::set_level(logging::level::debug);
 
     // Construct the ConfigurationReader from the Lua file
     ConfigurationReader configuration("../TTbar_FullyLeptonic/TTbar_FullyLeptonic.lua");

@@ -17,10 +17,7 @@
 
 add_executable(WW_FullyLeptonic "WW_FullyLeptonic.cc")
 
-target_link_libraries(WW_FullyLeptonic LINK_PUBLIC ${MOMEMTA_LIBRARIES})
-target_link_libraries(WW_FullyLeptonic LINK_PUBLIC ${ROOT_LIBRARIES})
-target_link_libraries(WW_FullyLeptonic LINK_PUBLIC ${ROOT_GENVECTOR_LIBRARY})
-target_link_libraries(WW_FullyLeptonic LINK_PUBLIC ${Boost_LIBRARIES})
+target_link_libraries(WW_FullyLeptonic momemta::momemta)
 
 set_target_properties(WW_FullyLeptonic PROPERTIES OUTPUT_NAME
       "WW_FullyLeptonic.exe")
