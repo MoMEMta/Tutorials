@@ -71,7 +71,7 @@ BlockF.blockf = {
 --   - multiply all the Jacobians with the matrix element and PDF values
 -- The loop is taken care of using a Looper module, which takes as input the collection of solutions 
 -- coming out of the Block, and a "Path" object defining the modules to be run in the loop: 
--- each of these modules has access to a single solution (accessed through the 'looper::solution' input tag).
+-- each of these modules has access to a single solution (accessed through the 'looper::particles/i' and 'looper::jacobian' input tags).
 Looper.looper = {
     solutions = 'blockf::solutions',
     path = Path('initial_state', 'WW', 'integrand')
@@ -81,13 +81,15 @@ Looper.looper = {
 -- Start of loop over solutions
 --
 
+    -- We now have reconstructed all particles, so we define a new set of inputs to be used inside the loop:
+    full_inputs = { 'looper::particles/1', inputs[1], 'looper::particles/2', inputs[2] }
+
     -- Using the fully reconstructed event (invisibles and visibles), build the initial state
     BuildInitialState.initial_state = {
-        particles = inputs,
-        solution = 'looper::solution',
+        particles = full_inputs,
     }
 
-    jacobians = {'flatter_s13::jacobian', 'flatter_s24::jacobian', 'tf_p1::TF_times_jacobian', 'tf_p2::TF_times_jacobian'}
+    jacobians = { 'flatter_s13::jacobian', 'flatter_s24::jacobian', 'tf_p1::TF_times_jacobian', 'tf_p2::TF_times_jacobian', 'looper::jacobian' }
 
     -- This modules evaluates the matrix element and PDFs on the fully reconstructed event, and multiplies those
     -- with all the Jacobians it is given.
@@ -103,31 +105,25 @@ Looper.looper = {
 
       initialState = 'initial_state::partons',
 
-      -- Configure how the Block's reconstructed particles and the input particles are linked to the matrix element (order and PID of the leg)
+      -- Configure how particles are linked to the matrix element (order and PID of the leg)
       -- The maps have to match the `mapFinalStates` index in the matrix element .cc file
-      invisibles = {
-        input = 'looper::solution',
+      -- The order of the entries in the 'ids' parameter corresponds to the order of the particles as given
+      -- in the 'input'.
+      particles = {
+        inputs = full_inputs,
         ids = {
           {
             pdg_id = 12,
             me_index = 2,
           },
-
-          {
-            pdg_id = -14,
-            me_index = 4,
-          }
-        }
-      },
-
-      particles = {
-        inputs = inputs,
-        ids = {
           {
             pdg_id = -11,
             me_index = 1,
           },
-
+          {
+            pdg_id = -14,
+            me_index = 4,
+          },
           {
             pdg_id = 13,
             me_index = 3,
@@ -141,7 +137,7 @@ Looper.looper = {
 
     -- The last module in the loop is a "Summer": it sums the value defined as input when looping over the solutions
     -- This allows to define the actual integrand (which is the sum of the product ME*PDF*PDF*Jacobians evaluated on each solution)
-    DoubleSummer.integrand = { input = 'WW::output' }
+    DoubleLooperSummer.integrand = { input = 'WW::output' }
 
 --
 -- End of loop over solutions

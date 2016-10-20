@@ -3,8 +3,7 @@ This repository contains a set of working standalone examples illustrating the u
 
 ## Requirements
 
-- ROOT >= 6.02
-- MoMEMta >= 0.1.0 (and its requirements, such as LHAPDF, Boost)
+- MoMEMta >= 0.1.0
 - A C++-11 capable compiler
 
 **Notes**:
@@ -24,9 +23,7 @@ make -j 4
 ```
 
 The following options are available when configuring the build (when running `cmake ..`):
-- `-DMOMEMTA_INCLUDE_DIR=(path)`: Path to the `include` directory of your installation of MoMEMta. Use this if your version of MoMEMta was installed locally and not in your system directories
-- `-DMOMEMTA_LIBRARY=(path)`: Path to the shared library `libmomemta.so` of your installation of MoMEMta. Use this if your version of MoMEMta was installed locally and not in your system directories
-- `-DBOOST_ROOT=(path)`: Use specific Boost version (path to install directory)
+- `-DCMAKE_PREFIX_PATH=(path)`: Path to the installation of MoMEMta. **Must be specified** if your version of MoMEMta is installed locally and not in your system directories. Caution: relative paths do not work.
 
 ## Run
 
@@ -39,7 +36,7 @@ For instance, to build the `TTbar_FullyLeptonic` example's matrix element, do:
 cd ../TTbar_FullyLeptonic/MatrixElement/
 mkdir build
 cd build
-cmake .. # If you had to specify the `MOMEMTA_INCLUDE_DIR´ when building the tutorials, you'll have to do it here as well
+cmake .. # If you had to specify the `CMAKE_PREFIX_PATH´ when building the tutorials, you'll have to do it here as well
 make -j 4
 ```
 This creates a shared library that can be loaded dynamically by MoMEMta. The example can now be executed:
