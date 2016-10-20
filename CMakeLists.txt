@@ -18,25 +18,15 @@
 cmake_minimum_required(VERSION 2.8)
 project(MoMEMta-Tutorials)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
-    "${PROJECT_SOURCE_DIR}/cmake/")
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -pedantic -Wextra")
 
 # Find dependencices
 
-find_package(MoMEMta REQUIRED)
+# CMake will automagically also link to MoMEMta's dependencies, ie LHAPDF and ROOT
+find_package(MoMEMta CONFIG REQUIRED)
 
-find_package(ROOT 6.02 REQUIRED)
-find_library(ROOT_GENVECTOR_LIBRARY GenVector HINTS ${ROOT_LIBRARY_DIR})
-
-set(Boost_NO_BOOST_CMAKE ON)
-find_package(Boost 1.54 REQUIRED log)
-add_definitions(-DBOOST_LOG_DYN_LINK)
-
-include_directories(${MOMEMTA_INCLUDE_DIRS})
-include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
-include_directories(SYSTEM ${ROOT_INCLUDE_DIRS})
+# But MoMEMta doesn't use TreeViewer: we have to add it ourselves
+find_library(ROOT_TREEVIEWER_LIBRARY TreeViewer HINTS ${ROOT_LIBRARY_DIR})
 
 # Retrieve all the tutorials & examples
 add_subdirectory(TTbar_FullyLeptonic)
