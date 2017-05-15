@@ -18,8 +18,8 @@
 add_executable(TTbar_FullyLeptonic "TTbar_FullyLeptonic.cc")
 
 target_link_libraries(TTbar_FullyLeptonic momemta::momemta)
-# The TTbar example uses TreeViewer
-target_link_libraries(TTbar_FullyLeptonic ${ROOT_TREEVIEWER_LIBRARY})
+# The TTbar example uses TreePlayer
+target_link_libraries(TTbar_FullyLeptonic ${ROOT_TREEPLAYER_LIBRARY})
 
 set_target_properties(TTbar_FullyLeptonic PROPERTIES OUTPUT_NAME
       "TTbar_FullyLeptonic.exe")
