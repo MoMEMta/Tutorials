@@ -25,8 +25,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -pedantic -Wextra")
 # CMake will automagically also link to MoMEMta's dependencies, ie LHAPDF and ROOT
 find_package(MoMEMta CONFIG REQUIRED)
 
-# But MoMEMta doesn't use TreeViewer: we have to add it ourselves
-find_library(ROOT_TREEVIEWER_LIBRARY TreeViewer HINTS ${ROOT_LIBRARY_DIR})
+# But MoMEMta doesn't use TreePlayer: we have to add it ourselves
+find_library(ROOT_TREEPLAYER_LIBRARY TreePlayer HINTS ${ROOT_LIBRARY_DIR} REQUIRED)
 
 # Retrieve all the tutorials & examples
 add_subdirectory(TTbar_FullyLeptonic)
