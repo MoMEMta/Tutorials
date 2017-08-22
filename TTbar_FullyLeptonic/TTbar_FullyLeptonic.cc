@@ -42,10 +42,23 @@ using LorentzVectorM = ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float>>
  * and saving these weights along with a copy of the event content in an output file.
  */
 
+void normalizeInput(LorentzVector& p4) {
+    if (p4.M() > 0)
+        return;
+
+    // Increase the energy until M is positive
+    while (p4.M2() < 0) {
+        double delta = p4.E() * 1e-16;
+        p4.SetE(p4.E() + delta);
+    };
+}
+
 int main(int argc, char** argv) {
 
     UNUSED(argc);
     UNUSED(argv);
+
+    using std::swap;
 
     /*
      * Load events from input file, retrieve reconstructed particles and MET
@@ -92,22 +105,31 @@ int main(int argc, char** argv) {
          * Prepare the LorentzVectors passed to MoMEMta:
          * In the input file they are written in the PtEtaPhiM<float> basis,
          * while MoMEMta expects PxPyPzE<double>, so we have to perform this change of basis:
+         *
+         * We define here Particles, allowing MoMEMta to correctly map the inputs to the configuration file.
+         * The string identifier used here must be the same as used to declare the inputs in the config file
          */
-        LorentzVector lep_plus_p4 { lep_plus_p4M->Px(), lep_plus_p4M->Py(), lep_plus_p4M->Pz(), lep_plus_p4M->E() };
-        LorentzVector lep_minus_p4 { lep_minus_p4M->Px(), lep_minus_p4M->Py(), lep_minus_p4M->Pz(), lep_minus_p4M->E() };
-        LorentzVector bjet1_p4 { bjet1_p4M->Px(), bjet1_p4M->Py(), bjet1_p4M->Pz(), bjet1_p4M->E() };
-        LorentzVector bjet2_p4 { bjet2_p4M->Px(), bjet2_p4M->Py(), bjet2_p4M->Pz(), bjet2_p4M->E() };
+        momemta::Particle lep_plus("lepton1",  LorentzVector { lep_plus_p4M->Px(), lep_plus_p4M->Py(), lep_plus_p4M->Pz(), lep_plus_p4M->E() });
+        momemta::Particle lep_minus("lepton2", LorentzVector { lep_minus_p4M->Px(), lep_minus_p4M->Py(), lep_minus_p4M->Pz(), lep_minus_p4M->E() });
+        momemta::Particle bjet1("bjet1", LorentzVector { bjet1_p4M->Px(), bjet1_p4M->Py(), bjet1_p4M->Pz(), bjet1_p4M->E() });
+        momemta::Particle bjet2("bjet2", LorentzVector { bjet2_p4M->Px(), bjet2_p4M->Py(), bjet2_p4M->Pz(), bjet2_p4M->E() });
+
+        // Due to numerical instability, the mass can sometimes be negative. If it's the case, change the energy in order to be mass-positive
+        normalizeInput(lep_plus.p4);
+        normalizeInput(lep_minus.p4);
+        normalizeInput(bjet1.p4);
+        normalizeInput(bjet2.p4);
 
         LorentzVectorM met_p4M { *MET_met, 0, *MET_phi, 0 };
         LorentzVector met_p4 { met_p4M.Px(), met_p4M.Py(), met_p4M.Pz(), met_p4M.E() };
         
         // Ensure the leptons are given in the correct order w.r.t their charge 
         if (*leading_lep_PID < 0)
-            std::swap(lep_plus_p4, lep_minus_p4);
+            swap(lep_plus, lep_minus);
 
         auto start_time = system_clock::now();
         // Compute the weights!
-        std::vector<std::pair<double, double>> weights = weight.computeWeights({lep_minus_p4, bjet1_p4, lep_plus_p4, bjet2_p4}, met_p4);
+        std::vector<std::pair<double, double>> weights = weight.computeWeights({lep_minus, bjet1, lep_plus, bjet2}, met_p4);
         auto end_time = system_clock::now();
 
         // Retrieve the weight and uncertainty

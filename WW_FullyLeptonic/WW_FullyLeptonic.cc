@@ -38,10 +38,23 @@ using namespace std::chrono;
  * and saving these weights along with a copy of the event content in an output file.
  */
 
+void normalizeInput(LorentzVector& p4) {
+    if (p4.M() > 0)
+        return;
+
+    // Increase the energy until M is positive
+    while (p4.M2() < 0) {
+        double delta = p4.E() * 1e-16;
+        p4.SetE(p4.E() + delta);
+    };
+}
+
 int main(int argc, char** argv) {
 
     UNUSED(argc);
     UNUSED(argv);
+
+    using std::swap;
 
     /*
      * Load events from input file, retrieve reconstructed particles and MET
@@ -86,16 +99,20 @@ int main(int argc, char** argv) {
     for (int64_t entry = 0; entry < N; entry++) {
         chain.GetEntry(entry);
         
-        LorentzVector lep1_p4 { lepton1->Px(), lepton1->Py(), lepton1->Pz(), lepton1->E() };
-        LorentzVector lep2_p4 { lepton2->Px(), lepton2->Py(), lepton2->Pz(), lepton2->E() };
+        momemta::Particle lep1("lepton1",  LorentzVector { lepton1->Px(), lepton1->Py(), lepton1->Pz(), lepton1->E() });
+        momemta::Particle lep2("lepton2", LorentzVector { lepton2->Px(), lepton2->Py(), lepton2->Pz(), lepton2->E() });
         int charge_l1 = charge_lep1;
 
+        // Due to numerical instability, the mass can sometimes be negative. If it's the case, change the energy in order to be mass-positive
+        normalizeInput(lep1.p4);
+        normalizeInput(lep2.p4);
+
         if (charge_l1 < 0)
-            std::swap(lep1_p4, lep2_p4);
+            swap(lep1, lep2);
 
         auto start_time = system_clock::now();
         // Compute the weights!
-        std::vector<std::pair<double, double>> weights = weight.computeWeights({lep1_p4,lep2_p4});
+        std::vector<std::pair<double, double>> weights = weight.computeWeights({lep1, lep2});
         auto end_time = system_clock::now();
 
         // Retrieve the weight and uncertainty

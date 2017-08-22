@@ -1,6 +1,14 @@
 -- Load the library containing the matrix element
 load_modules('../TTbar_FullyLeptonic/MatrixElement/build/libme_TTbar_ee.so')
 
+-- Declare inputs required by this configuration file. Since it's TTbar fully leptonic, we expect 4 inputs,
+-- the two leptons and the two bjets
+-- P4 for each particle are passed when calling the C++ `computeWeights` function
+local lepton1 = declare_input("lepton1")
+local lepton2 = declare_input("lepton2")
+local bjet1 = declare_input("bjet1")
+local bjet2 = declare_input("bjet2")
+
 -- Global parameters used by several modules
 -- Changing these has NO impact on the value of the parameters used by the matrix element!
 parameters = {
@@ -9,6 +17,12 @@ parameters = {
     top_width = 1.491500,
     W_mass = 80.419002,
     W_width = 2.047600,
+
+    -- You can export a graphviz representation of the computation graph using the
+    -- `export_graph_as` parameter
+    -- Use the `dot` command to convert the graph into a PDF
+    -- dot -Tpdf TTbar_fullyleptonic_computing_graph.dot -o TTbar_fullyleptonic_computing_graph.pdf
+    export_graph_as = "TTbar_fullyleptonic_computing_graph.dot"
 }
 
 -- Configuration of Cuba
@@ -23,27 +37,40 @@ GaussianTransferFunctionOnEnergy.tf_p1 = {
     -- add_dimension() generates an input tag allowing the retrieve a new phase-space point component,
     -- and it notifies MoMEMta that a new integration dimension is requested
     ps_point = add_dimension(),
-    reco_particle = 'input::particles/1',
+    -- We use the directly the inputs declared above. The `reco_p4` attribute returns the correct input tag
+    reco_particle = lepton1.reco_p4,
     sigma = 0.05,
 }
+
+-- We can assign to each input a `gen` p4. By default, the gen p4 is the same as the reco one, which is useful when
+-- no transfer function is applied. Here however, we applied a transfer function to the `lepton1` input, meaning that the
+-- output of the `tf_p1` module correspond now to the `gen` p4 of `lepton1`. To reflect that, we explicitly set the gen p4 
+-- to be the output of the `tf_p1` module
+lepton1.set_gen_p4("tf_p1::output");
 
 GaussianTransferFunctionOnEnergy.tf_p2 = {
     ps_point = add_dimension(),
-    reco_particle = 'input::particles/2',
+    reco_particle = lepton2.reco_p4,
     sigma = 0.10,
 }
+
+lepton2.set_gen_p4("tf_p2::output")
 
 GaussianTransferFunctionOnEnergy.tf_p3 = {
     ps_point = add_dimension(),
-    reco_particle = 'input::particles/3',
+    reco_particle = bjet1.reco_p4,
     sigma = 0.05,
 }
 
+bjet1.set_gen_p4("tf_p3::output");
+
 GaussianTransferFunctionOnEnergy.tf_p4 = {
     ps_point = add_dimension(),
-    reco_particle = 'input::particles/4',
+    reco_particle = bjet2.reco_p4,
     sigma = 0.10,
 }
+
+bjet2.set_gen_p4("tf_p4::output");
 
 inputs_before_perm = {
     'tf_p1::output',
@@ -52,21 +79,19 @@ inputs_before_perm = {
     'tf_p4::output',
 }
 
--- Use permutator module to permutate input particles 2 and 4 (ie, the b-jets) using the MC,
--- which requires an additional dimension for integration
-Permutator.permutator = {
-    ps_point = add_dimension(),
-    inputs = {
-      inputs_before_perm[2],
-      inputs_before_perm[4],
-    }
-}
+-- We want to automatically generate permutation between the two bjet using the MC
+-- This function inserts a Permutator module and swap the `gen` p4 of each inputs to
+-- points to the output of this module
+-- Note that we can also choose to do the permutation **before** the transfer function
+-- In this case, the function to use is `add_reco_permutations` and must be called before
+-- defining transfer functions
+add_gen_permutations(bjet1, bjet2)
 
 inputs = {
-  inputs_before_perm[1],
-  'permutator::output/1',
-  inputs_before_perm[3],
-  'permutator::output/2',
+  lepton1.gen_p4,
+  bjet1.gen_p4,
+  lepton2.gen_p4,
+  bjet2.gen_p4
 }
 
 -- Use the BreitWignerGenerators to generate values distributed as the corresponding peaks,
@@ -99,7 +124,10 @@ BreitWignerGenerator.flatter_s256 = {
 -- converts our particles given by the transfer functions, and our propagator masses
 -- into solutions for the missing particles in the event
 BlockD.blockd = {
-    inputs = inputs,
+    p3 = inputs[1],
+    p4 = inputs[2],
+    p5 = inputs[3],
+    p6 = inputs[4],
 
     -- Fix the neutrino transverse momentum to the experimental MET passed to MoMEMta
     pT_is_met = true,

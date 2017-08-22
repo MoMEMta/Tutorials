@@ -1,5 +1,10 @@
 -- Load the library containing the matrix element
 load_modules('../WW_FullyLeptonic/MatrixElement/build/libme_WW_emu.so')
+--
+-- Declare inputs required by this configuration file.
+-- P4 for each particle are passed when calling the C++ `computeWeights` function
+local lepton1 = declare_input("lepton1")
+local lepton2 = declare_input("lepton2")
 
 -- Global parameters used by several modules
 -- Changing these has NO impact on the value of the parameters used by the matrix element!
@@ -7,6 +12,12 @@ parameters = {
     energy = 13000.,
     W_mass = 80.419002,
     W_width = 2.047600,
+
+    -- You can export a graphviz representation of the computation graph using the
+    -- `export_graph_as` parameter
+    -- Use the `dot` command to convert the graph into a PDF
+    -- dot -Tpdf WW_fullyleptonic_computing_graph.dot -o WW_fullyleptonic_computing_graph.pdf
+    export_graph_as = "WW_fullyleptonic_computing_graph.dot"
 }
 
 -- Configuration of Cuba
@@ -21,21 +32,24 @@ GaussianTransferFunctionOnEnergy.tf_p1 = {
     -- add_dimension() generates an input tag allowing the retrieve a new phase-space point component,
     -- and it notifies MoMEMta that a new integration dimension is requested
     ps_point = add_dimension(),
-    reco_particle = 'input::particles/1',
+    -- We use the directly the inputs declared above. The `reco_p4` attribute returns the correct input tag
+    reco_particle = lepton1.reco_p4,
     sigma = 0.05,
 }
+
+-- We can assign to each input a `gen` p4. By default, the gen p4 is the same as the reco one, which is useful when
+-- no transfer function is applied. Here however, we applied a transfer function to the `lepton1` input, meaning that the
+-- output of the `tf_p1` module correspond now to the `gen` p4 of `lepton1`. To reflect that, we explicitly set the gen p4 
+-- to be the output of the `tf_p1` module
+lepton1.set_gen_p4("tf_p1::output");
 
 GaussianTransferFunctionOnEnergy.tf_p2 = {
     ps_point = add_dimension(),
-    reco_particle = 'input::particles/2',
+    reco_particle = lepton2.reco_p4,
     sigma = 0.05,
 }
 
-inputs = {
-    'tf_p1::output',
-    'tf_p2::output',
-}
-
+lepton2.set_gen_p4("tf_p2::output");
 
 -- Use the BreitWignerGenerators to generate values distributed as the corresponding peaks,
 -- for each propagator in the topology
@@ -55,7 +69,8 @@ BreitWignerGenerator.flatter_s24 = {
 -- converts our particles given by the transfer functions, and our propagator masses
 -- into solutions for the missing particles in the event
 BlockF.blockf = {
-    inputs = inputs,
+    p3 = lepton1.gen_p4,
+    p4 = lepton2.gen_p4;
 
     s13 = 'flatter_s13::s',
     s24 = 'flatter_s24::s',
@@ -82,7 +97,7 @@ Looper.looper = {
 --
 
     -- We now have reconstructed all particles, so we define a new set of inputs to be used inside the loop:
-    full_inputs = { 'looper::particles/1', inputs[1], 'looper::particles/2', inputs[2] }
+    full_inputs = { 'looper::particles/1', lepton1.gen_p4, 'looper::particles/2', lepton2.gen_p4 }
 
     -- Using the fully reconstructed event (invisibles and visibles), build the initial state
     BuildInitialState.initial_state = {
