@@ -4,12 +4,11 @@ This repository contains a set of working standalone examples illustrating the u
 ## Requirements
 
 - ROOT >= 6.02
-- MoMEMta >= 0.1.0 (and its requirements, such as LHAPDF, Boost)
+- MoMEMta >= 1.0.0 (and its requirements, such as LHAPDF, Boost)
 - A C++-11 capable compiler
 
 **Notes**:
-- This is the development branch of the Tutorials, meaning that compatibility with the latest development version of MoMEMta is not guaranteed.
-To ensure the Tutorials work properly, select a branch corresponding to your installed version of MoMEMta.
+- This branch of the Tutorials is only compatible with versions 1.0.X of MoMEMta
 - MoMEMta needs to be installed on the system (locally or globally), cf. MoMEMta documentation
 
 ## Install
