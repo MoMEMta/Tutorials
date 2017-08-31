@@ -3,7 +3,7 @@ This repository contains a set of working standalone examples illustrating the u
 
 ## Requirements
 
-- MoMEMta >= 0.1.0
+- MoMEMta >= 1.0.0
 - A C++-11 capable compiler
 
 **Notes**:
