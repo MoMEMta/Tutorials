@@ -109,6 +109,17 @@ P1_Sigma_sm_gg_epvebemvexbx::P1_Sigma_sm_gg_epvebemvexbx(const ParameterSet&
 
 }
 
+void P1_Sigma_sm_gg_epvebemvexbx::resetHelicities() 
+{
+  for (auto& finalState: mapFinalStates)
+  {
+    for (auto& subProcess: finalState.second)
+    {
+      subProcess.resetHelicities(); 
+    }
+  }
+}
+
 //--------------------------------------------------------------------------
 // Evaluate |M|^2, return a map of final states
 

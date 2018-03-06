@@ -83,7 +83,10 @@ class P1_Sigma_sm_gg_epvebemvexbx: public momemta::MatrixElement
       return params; 
     }
 
-    // needed? const std::vector<double>& getMasses() const {return mME;}
+    // Make sure all helicity combinations are tried again (forget optimisation
+    // consisting of not evaluating helicities which have given a zero result
+    // once)
+    virtual void resetHelicities(); 
 
   private:
 

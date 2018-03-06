@@ -93,6 +93,17 @@ P1_Sigma_sm_uux_epvemumvmx::P1_Sigma_sm_uux_epvemumvmx(const ParameterSet&
 
 }
 
+void P1_Sigma_sm_uux_epvemumvmx::resetHelicities() 
+{
+  for (auto& finalState: mapFinalStates)
+  {
+    for (auto& subProcess: finalState.second)
+    {
+      subProcess.resetHelicities(); 
+    }
+  }
+}
+
 //--------------------------------------------------------------------------
 // Evaluate |M|^2, return a map of final states
 
