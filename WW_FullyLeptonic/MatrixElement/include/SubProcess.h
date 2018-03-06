@@ -40,6 +40,10 @@ namespace pp_WW_fully_leptonic_sm {
                 denominator(denom) {
                     // Empty
                 }
+
+            void resetHelicities() {
+                std::fill(goodHel.begin(), goodHel.end(), true);
+            }
     
             Callback callback;
             bool hasMirrorProcess; 
