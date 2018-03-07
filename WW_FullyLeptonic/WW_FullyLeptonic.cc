@@ -43,8 +43,9 @@ void normalizeInput(LorentzVector& p4) {
         return;
 
     // Increase the energy until M is positive
+    p4.SetE(p4.P());
     while (p4.M2() < 0) {
-        double delta = p4.E() * 1e-16;
+        double delta = p4.E() * 1e-5;
         p4.SetE(p4.E() + delta);
     };
 }
