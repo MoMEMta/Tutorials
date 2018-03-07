@@ -24,6 +24,7 @@
 
 #include <vector> 
 #include <utility>
+#include <functional>
 
 namespace TTbar_ee_sm {
 
