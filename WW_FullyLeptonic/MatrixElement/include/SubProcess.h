@@ -24,6 +24,7 @@
 
 #include <vector> 
 #include <utility>
+#include <functional>
 
 namespace pp_WW_fully_leptonic_sm {
 
