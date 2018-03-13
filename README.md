@@ -5,6 +5,7 @@ This repository contains a set of working standalone examples illustrating the u
 
 - MoMEMta >= 1.0.0
 - A C++-11 capable compiler
+- CMake (>= 3.4.0)
 
 **Notes**:
 - This is the development branch of the Tutorials, meaning that compatibility with the latest development version of MoMEMta is not guaranteed.
