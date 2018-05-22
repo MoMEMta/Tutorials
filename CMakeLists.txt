@@ -15,10 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.4)
 project(MoMEMta-Tutorials)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -pedantic -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wextra")
+
+# Require c++11 *at least*, use default compiler standard if possible
+if (CMAKE_CXX_STANDARD_COMPUTED_DEFAULT STRLESS "11" OR
+        CMAKE_CXX_STANDARD_COMPUTED_DEFAULT STREQUAL "98")
+    set(CMAKE_CXX_STANDARD 11)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+endif()
+
+# Stick to the standard 
+set(CMAKE_CXX_EXTENSIONS OFF) 
 
 # Find dependencices
 

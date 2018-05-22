@@ -77,10 +77,9 @@ int main(int argc, char** argv) {
     TTreeReaderValue<int> leading_lep_PID(myReader, "leadLepPID");
 
     /*
-     * Define output TTree, which will be a clone of the input tree,
-     * with the addition of the weights we're computing (including uncertainty and computation time)
+     * Define output TTree, which will contain the weights we're computing (including uncertainty and computation time)
      */
-    std::unique_ptr<TTree> out_tree(chain.CloneTree(0));
+    std::unique_ptr<TTree> out_tree = std::make_unique<TTree>("t", "t");
     double weight_TT, weight_TT_err, weight_TT_time;
     out_tree->Branch("weight_TT", &weight_TT);
     out_tree->Branch("weight_TT_err", &weight_TT_err);
@@ -145,7 +144,7 @@ int main(int argc, char** argv) {
     }
 
     // Save our output TTree
-    out_tree->SaveAs("tt_20evt_weighted.root");
+    out_tree->SaveAs("tt_20evt_weights.root");
 
     return 0;
 }
