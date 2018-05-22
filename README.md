@@ -1,5 +1,8 @@
 # Tutorials
-This repository contains a set of working standalone examples illustrating the use of MoMEMta.
+This repository contains a set of working standalone examples illustrating the use of MoMEMta:
+- `TTbar_FullyLeptonic`: compute weights under the hypothesis of top quark pair production with fully leptonic decay
+- `WW_FullyLeptonic`: compute weights under the hypothesis of W boson pair production with fully leptonic decay
+- `Paper_configs`: Lua configuration files for the different examples presented in the MoMEMta reference paper (only the configurations are provided, no fully working examples)
 
 ## Requirements
 
